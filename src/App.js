@@ -20,7 +20,7 @@ const App = () => {
   /**
    * Create a variable here that references the abi content!
    */
-  const contractABI = wavePortalAbi.abi; // diceRollerAbi.abi
+  let contractABI = wavePortalAbi.abi; // diceRollerAbi.abi
   const diceRollerContractABI = diceRollerAbi.abi;
   
   const checkIfWalletIsConnected = async () => {
@@ -99,6 +99,17 @@ console.log('sdf: ' + count)
     }
   }
 
+  // Download the contract ABI from etherscan. Assuming the contract has been verified.
+  // Can avoid this by storing ABI locally too. Both are implemented.
+  const downloadABI = async () => {
+    const url = `https://api-kovan.etherscan.io/api?module=contract&action=getabi&address=${env.WAVEPORTAL_CONTRACT_ADDRESS}&apikey=${env.ETHERSCAN_API}`
+    console.log('abi url: ' + url);
+    const response = await fetch(url)
+    const r2 = await response.json()
+    // console.log('response: ' + r2.result);
+    return JSON.parse(r2.result);
+  }
+  
   const wave = async () => {
     try {
       const { ethereum } = window;
@@ -106,10 +117,14 @@ console.log('sdf: ' + count)
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
+        contractABI = await downloadABI();
+        // contractABI = wavePortalAbi.abi
+        // console.log( 'abi 1: ' + JSON.stringify(wavePortalAbi.abi) )
+        // console.log( 'abi 2: ' + JSON.stringify( await downloadABI()) )
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let count = await wavePortalContract.getTotalWaves();
-console.log('sdf: ' + count)
+        console.log('sdf: ' + count)
         console.log("Retrieved total wave count...", count.toNumber());
 
         const waveTxn = await wavePortalContract.wave();

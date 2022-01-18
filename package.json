@@ -34,6 +34,6 @@
     ]
   },
   "react-dotenv": {
-    "whitelist": ["DICEROLLER_CONTRACT_ADDRESS", "WAVEPORTAL_CONTRACT_ADDRESS"]
+    "whitelist": ["DICEROLLER_CONTRACT_ADDRESS", "WAVEPORTAL_CONTRACT_ADDRESS", "ETHERSCAN_API"]
   }
 }
