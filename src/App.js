@@ -121,43 +121,65 @@ const App = () => {
   }
 
   const wave = async () => {
+    try {
+      const wavePortalContract = await contractInstance();
+      const waveTxn = await wavePortalContract.wave();
+      setMining(true);
+      console.log("Mining...", waveTxn.hash);
+
+      await waveTxn.wait();
+      console.log("Mined -- ", waveTxn.hash);
+      setMining(false);
+
+      let count = await wavePortalContract.getTotalWaves();
+      console.log("Retrieved total wave count...", count.toNumber());
+      setWaveCount( count.toNumber() );
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const populateContractUI = async() => {
     let contractABI = wavePortalAbi.abi;
+    try {
+      const wavePortalContract = await contractInstance();
+      let count = await wavePortalContract.getTotalWaves();
+      console.log('sdf: ' + count)
+      console.log("Retrieved total wave count...", count.toNumber());
+      setWaveCount( count.toNumber() );
+    } catch (error) {
+      console.log(error)
+    }  
+  }
+
+
+  // 
+  const contractInstance = async() => {
+    let contract = null;
     try {
       const { ethereum } = window;
 
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        
+
+        let contractABI = wavePortalAbi.abi;
+
         // download ABI from etherscan
         // if (contractABI === null) { 
         //   contractABI = await downloadABI();
         // }
 
-        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-
-        let count = await wavePortalContract.getTotalWaves();
-        console.log('sdf: ' + count)
-        console.log("Retrieved total wave count...", count.toNumber());
-        setWaveCount( count.toNumber() );
-
-        const waveTxn = await wavePortalContract.wave();
-        setMining(true);
-        console.log("Mining...", waveTxn.hash);
-
-        await waveTxn.wait();
-        console.log("Mined -- ", waveTxn.hash);
-        setMining(false);
-
-        count = await wavePortalContract.getTotalWaves();
-        console.log("Retrieved total wave count...", count.toNumber());
-        setWaveCount( count.toNumber() );
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
       } else {
         console.log("Ethereum object doesn't exist!");
       }
+
+      return contract;
     } catch (error) {
       console.log(error)
-    }
+      throw error;
+    }  
   }
 
   useEffect(() => {
@@ -165,34 +187,6 @@ const App = () => {
     listenForAccountChange();
   }, [])
 
-
-  const populateContractUI = async() => {
-    let contractABI = wavePortalAbi.abi;
-    try {
-      const { ethereum } = window;
-
-      if (ethereum) {
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
-        
-        // download ABI from etherscan
-        // if (contractABI === null) { 
-        //   contractABI = await downloadABI();
-        // }
-
-        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-
-        let count = await wavePortalContract.getTotalWaves();
-        console.log('sdf: ' + count)
-        console.log("Retrieved total wave count...", count.toNumber());
-        setWaveCount( count.toNumber() );
-      } else {
-        console.log("Ethereum object doesn't exist!");
-      }
-    } catch (error) {
-      console.log(error)
-    }  
-  }
 
   // This logic is specific to MetaMask for now.
   const listenForAccountChange =() => {
