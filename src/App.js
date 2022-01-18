@@ -42,6 +42,7 @@ const App = () => {
         const account = accounts[0];
         console.log("Found an authorized account:", account);
         setCurrentAccount(account);
+        await populateContractUI();
       } else {
         console.log("No authorized account found")
       }
@@ -164,6 +165,34 @@ const App = () => {
     listenForAccountChange();
   }, [])
 
+
+  const populateContractUI = async() => {
+    let contractABI = wavePortalAbi.abi;
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        
+        // download ABI from etherscan
+        // if (contractABI === null) { 
+        //   contractABI = await downloadABI();
+        // }
+
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        let count = await wavePortalContract.getTotalWaves();
+        console.log('sdf: ' + count)
+        console.log("Retrieved total wave count...", count.toNumber());
+        setWaveCount( count.toNumber() );
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }  
+  }
 
   // This logic is specific to MetaMask for now.
   const listenForAccountChange =() => {
