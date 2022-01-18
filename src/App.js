@@ -18,7 +18,7 @@ const App = () => {
   const waveContractAddress = `${env.WAVEPORTAL_CONTRACT_ADDRESS}`;// "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9";
   const contractAddress = waveContractAddress;
 
-  console.log('contractAddress: ' + contractAddress)
+  // console.log('contractAddress: ' + contractAddress)
   /**
    * Create a variable here that references the abi content!
    */
@@ -161,11 +161,24 @@ const App = () => {
 
   useEffect(() => {
     checkIfWalletIsConnected();
+    listenForAccountChange();
   }, [])
+
+
+  // This logic is specific to MetaMask for now.
+  const listenForAccountChange =() => {
+    window.ethereum.on('accountsChanged', function (accounts) {
+      // Time to reload your interface with accounts[0]!
+      console.log('new account change: ' + JSON.stringify(accounts))
+      setCurrentAccount(accounts[0]);
+    })
+  }
 
   const renderWavePortalUI =() => {
     return (
       <>
+        <h3>Connected Account: {currentAccount}</h3>
+
         <h3>Times waved: {waveCount}</h3>
 
         {mining && 
