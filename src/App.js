@@ -8,6 +8,8 @@ import diceRollerAbi from "./utils/DiceRoller.json";
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
+  const [waveCount, setWaveCount] = useState("");
+  const [mining, setMining] = useState(false);
 
   /**
    * Create a variable here that holds the contract address after you deploy!
@@ -20,7 +22,7 @@ const App = () => {
   /**
    * Create a variable here that references the abi content!
    */
-  let contractABI = wavePortalAbi.abi; // diceRollerAbi.abi
+  // let contractABI = wavePortalAbi.abi; // diceRollerAbi.abi
   const diceRollerContractABI = diceRollerAbi.abi;
   
   const checkIfWalletIsConnected = async () => {
@@ -80,7 +82,7 @@ const App = () => {
         const wavePortalContract = new ethers.Contract(diceRollerContractAddress, diceRollerContractABI, signer);
 
         let count = await wavePortalContract.getAllUsersCount();
-console.log('sdf: ' + count)
+        console.log('sdf: ' + count)
         console.log("Retrieved total wave count...", count.toNumber());
 
         // const waveTxn = await wavePortalContract.wave();
@@ -107,34 +109,48 @@ console.log('sdf: ' + count)
     const response = await fetch(url)
     const r2 = await response.json()
     // console.log('response: ' + r2.result);
+    //saveABI(r2)
     return JSON.parse(r2.result);
   }
   
+  const saveABI = async (content) => {
+    // need to add an api to the server to perform the saving of abi file
+    // all abi processes should be server side.
+    // client just makes request to server.
+  }
+
   const wave = async () => {
+    let contractABI = wavePortalAbi.abi;
     try {
       const { ethereum } = window;
 
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        contractABI = await downloadABI();
-        // contractABI = wavePortalAbi.abi
-        // console.log( 'abi 1: ' + JSON.stringify(wavePortalAbi.abi) )
-        // console.log( 'abi 2: ' + JSON.stringify( await downloadABI()) )
+        
+        // download ABI from etherscan
+        // if (contractABI === null) { 
+        //   contractABI = await downloadABI();
+        // }
+
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let count = await wavePortalContract.getTotalWaves();
         console.log('sdf: ' + count)
         console.log("Retrieved total wave count...", count.toNumber());
+        setWaveCount( count.toNumber() );
 
         const waveTxn = await wavePortalContract.wave();
+        setMining(true);
         console.log("Mining...", waveTxn.hash);
 
         await waveTxn.wait();
         console.log("Mined -- ", waveTxn.hash);
+        setMining(false);
 
         count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
+        setWaveCount( count.toNumber() );
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -147,6 +163,22 @@ console.log('sdf: ' + count)
     checkIfWalletIsConnected();
   }, [])
 
+  const renderWavePortalUI =() => {
+    return (
+      <>
+        <h3>Times waved: {waveCount}</h3>
+
+        {mining && 
+          <span>Please wait. Mining...</span>
+        }
+
+        <button className="waveButton" onClick={wave}>
+          Wave at Me
+        </button>
+      </>
+    )
+  }
+  
   return (
     <div className="mainContainer">
       <div className="dataContainer">
@@ -159,9 +191,7 @@ console.log('sdf: ' + count)
         </div>
 
         {currentAccount &&
-          <button className="waveButton" onClick={wave}>
-            Wave at Me
-          </button>
+          renderWavePortalUI()
         }
 
         {/*
